@@ -93,6 +93,7 @@ public class NotificationController {
                     NotificationPayload payload = new NotificationPayload();
                     payload.setStatus(SseStatus.NEW);
                     payload.setNotification(notification);
+                    emitterService.push(username, payload);
                     return Mono.just("완료");
                 })
                 .onErrorResume(throwable -> {
