@@ -1,18 +1,18 @@
 package com.example.webfluxsseexample.controller;
 
 import com.example.webfluxsseexample.model.Notification;
-import com.example.webfluxsseexample.payload.NotificationPayload;
 import com.example.webfluxsseexample.model.NotificationRequestData;
+import com.example.webfluxsseexample.payload.NotificationPayload;
 import com.example.webfluxsseexample.payload.SseStatus;
 import com.example.webfluxsseexample.service.EmitterService;
 import com.example.webfluxsseexample.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
-import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.server.ServerRequest;
+import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
@@ -20,28 +20,21 @@ import reactor.core.publisher.Sinks;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
-@RestController
+@Component("NotificationHandler")
 @RequiredArgsConstructor
 @Slf4j
-public class NotificationController {
+public class NotificationHandler {
 
     private final EmitterService emitterService;
     private final NotificationService notificationService;
 
+    public Mono<ServerResponse> connect(ServerRequest request){
+        log.info("handler ");
 
-    @GetMapping(value = "/connect/{username}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<NotificationPayload>> connect(@PathVariable("username") String username,
-                                                              ServerHttpRequest request) {
-
-        HttpHeaders headers = request.getHeaders();
-        log.info("해더 확인 예제~ : {}",headers);
-        String authorization = headers.getFirst(HttpHeaders.AUTHORIZATION);
-        log.info("authorization -> {}",authorization);
-
+        String username = request.pathVariable("username");
         Sinks.Many<NotificationPayload> sinks = Sinks.many().multicast().onBackpressureBuffer();
 
-
-        return notificationService.getNotificationList(username)
+        Flux<ServerSentEvent<NotificationPayload>> stream =  notificationService.getNotificationList(username)
                 .map(notification -> {
                     NotificationPayload payload = new NotificationPayload();
                     payload.setStatus(SseStatus.CONNECT);
@@ -83,21 +76,32 @@ public class NotificationController {
                                 log.info("doFinally Default");
                     }
                 });
+
+        return ServerResponse.ok()
+                .contentType(MediaType.TEXT_EVENT_STREAM)
+                .body(stream, NotificationPayload.class);
     }
 
-    @PostMapping("/push/{username}")
-    public Mono<String> push(@PathVariable("username") String username, @RequestBody NotificationRequestData requestData){
-        log.info("push 접속");
-        return notificationService.save(username, requestData)
-                .flatMap(notification -> {
-                    NotificationPayload payload = new NotificationPayload();
-                    payload.setStatus(SseStatus.NEW);
-                    payload.setNotification(notification);
-                    return Mono.just("완료");
-                })
-                .onErrorResume(throwable -> {
-                    return Mono.error(throwable);
+    public Mono<ServerResponse> push(ServerRequest request){
+        String username = request.pathVariable("username");
+        Mono<NotificationRequestData> requestBody = request.bodyToMono(NotificationRequestData.class);
+        
+        return requestBody
+                .flatMap(requestData -> {
+                    return notificationService.save(username, requestData)
+                            .flatMap(notification -> {
+                                NotificationPayload payload = new NotificationPayload();
+                                payload.setStatus(SseStatus.NEW);
+                                payload.setNotification(notification);
+                                emitterService.push(username, payload);
+                                return ServerResponse.ok().bodyValue("성공");
+                            })
+                            .onErrorResume(throwable -> {
+                                return Mono.error(throwable);
+                            });
+                    
                 });
+
     }
 
 
