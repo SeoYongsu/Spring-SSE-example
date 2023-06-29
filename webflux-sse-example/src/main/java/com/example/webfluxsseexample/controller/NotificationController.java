@@ -22,6 +22,7 @@ import java.util.concurrent.TimeoutException;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api")
 @Slf4j
 public class NotificationController {
 
@@ -85,6 +86,7 @@ public class NotificationController {
                 });
     }
 
+
     @PostMapping("/push/{username}")
     public Mono<String> push(@PathVariable("username") String username, @RequestBody NotificationRequestData requestData){
         log.info("push 접속");
@@ -96,9 +98,7 @@ public class NotificationController {
                     emitterService.push(username, payload);
                     return Mono.just("완료");
                 })
-                .onErrorResume(throwable -> {
-                    return Mono.error(throwable);
-                });
+                .onErrorResume(Mono::error);
     }
 
 

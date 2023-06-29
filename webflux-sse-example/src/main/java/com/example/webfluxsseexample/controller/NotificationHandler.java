@@ -30,7 +30,6 @@ public class NotificationHandler {
 
     public Mono<ServerResponse> connect(ServerRequest request){
         log.info("handler ");
-
         String username = request.pathVariable("username");
         Sinks.Many<NotificationPayload> sinks = Sinks.many().multicast().onBackpressureBuffer();
 
@@ -87,8 +86,8 @@ public class NotificationHandler {
         Mono<NotificationRequestData> requestBody = request.bodyToMono(NotificationRequestData.class);
         
         return requestBody
-                .flatMap(requestData -> {
-                    return notificationService.save(username, requestData)
+                .flatMap(requestData ->
+                     notificationService.save(username, requestData)
                             .flatMap(notification -> {
                                 NotificationPayload payload = new NotificationPayload();
                                 payload.setStatus(SseStatus.NEW);
@@ -96,11 +95,8 @@ public class NotificationHandler {
                                 emitterService.push(username, payload);
                                 return ServerResponse.ok().bodyValue("성공");
                             })
-                            .onErrorResume(throwable -> {
-                                return Mono.error(throwable);
-                            });
-                    
-                });
+                            .onErrorResume(Mono::error)
+                );
 
     }
 

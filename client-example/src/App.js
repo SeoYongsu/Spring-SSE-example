@@ -1,4 +1,4 @@
-import logo from './logo.svg';
+
 import './App.css';
 import React, { useState } from 'react';
 
@@ -24,7 +24,7 @@ function App() {
             setMessage('');     // message 상태를 초기화
             setMessages([]);    // messages 상태를 초기화
 
-            const eventSource = new EventSource(`http://localhost:8080/connect/${username}`, { withCredentials: true });
+            const eventSource = new EventSource(`http://localhost:8080/api/connect/${username}`, { withCredentials: true });
 
             eventSource.addEventListener('open',(event)=>{
                 console.log("open : ",event);
@@ -61,8 +61,12 @@ function App() {
             setMessages([]);
 
             const url = `http://localhost:8080/connect/${username}`;
-            const eventSource = new EventSourcePolyfill(url,  { headers: { Authorization: token } } );
-
+            const eventSource = new EventSourcePolyfill(url,  {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
+                heartbeatTimeout: 60*1000
+            });
             eventSource.onopen = (event) => {
                 console.log("open : " ,event);
             }

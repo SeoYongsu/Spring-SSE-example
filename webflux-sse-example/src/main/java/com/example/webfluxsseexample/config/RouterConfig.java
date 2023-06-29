@@ -13,7 +13,6 @@ import static org.springframework.web.reactive.function.server.RequestPredicates
 
 @Configuration
 public class RouterConfig {
-
     @Bean
     RouterFunction<ServerResponse> sseEndPoint(NotificationHandler handler){
         return RouterFunctions.route(
