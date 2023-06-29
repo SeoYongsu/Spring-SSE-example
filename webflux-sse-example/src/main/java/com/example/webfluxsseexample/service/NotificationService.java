@@ -2,9 +2,7 @@ package com.example.webfluxsseexample.service;
 
 import com.example.webfluxsseexample.model.MessageStatus;
 import com.example.webfluxsseexample.model.Notification;
-import com.example.webfluxsseexample.model.NotificationRequestData;
-import com.example.webfluxsseexample.payload.NotificationPayload;
-import com.example.webfluxsseexample.payload.SseStatus;
+import com.example.webfluxsseexample.payload.NotificationRequestData;
 import com.example.webfluxsseexample.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

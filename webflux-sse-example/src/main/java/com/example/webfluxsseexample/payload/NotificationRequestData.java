@@ -1,4 +1,4 @@
-package com.example.webfluxsseexample.model;
+package com.example.webfluxsseexample.payload;
 
 import com.example.webfluxsseexample.model.MessageType;
 import lombok.Data;

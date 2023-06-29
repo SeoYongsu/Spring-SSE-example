@@ -1,8 +1,7 @@
 package com.example.webfluxsseexample.controller;
 
-import com.example.webfluxsseexample.model.Notification;
 import com.example.webfluxsseexample.payload.NotificationPayload;
-import com.example.webfluxsseexample.model.NotificationRequestData;
+import com.example.webfluxsseexample.payload.NotificationRequestData;
 import com.example.webfluxsseexample.payload.SseStatus;
 import com.example.webfluxsseexample.service.EmitterService;
 import com.example.webfluxsseexample.service.NotificationService;
